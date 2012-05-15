@@ -1,10 +1,11 @@
-#include <sys/select.h>
-#include <sys/types.h>
-#include <sys/wait.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/select.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+
 
 int timed_read(const char* command, char* result, int size) 
 {
@@ -34,14 +35,13 @@ int timed_read(const char* command, char* result, int size)
                         char *loc = index(result, '\n');
                         if (loc) 
                                 result[loc - result] = '\0';
-                }
+                } else if (nready <= 0) {
+			return -1;
+		}
                 //wait 5 seconds for data ready.
                 kill(pid, 9);
-                int ret = waitpid(pid, NULL, 0);
-                if (nready <= 0) 
-                        return -1;
-                else 
-                        return 0;
+                wait(NULL);
+                return 0;
         } else if (pid == 0){
                 close(pipe_fd[0]);
                 dup2(pipe_fd[1], 1);
